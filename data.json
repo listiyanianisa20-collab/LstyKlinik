@@ -1,0 +1,142 @@
+{
+  "customers": [
+    {
+      "id_pelanggan": 1,
+      "nama": "Alya Putri",
+      "no_hp": "081234567801",
+      "alamat": "Bandung",
+      "tanggal_daftar": "2026-09-15"
+    },
+    {
+      "id_pelanggan": 2,
+      "nama": "Nadia Rahma",
+      "no_hp": "081234567802",
+      "alamat": "Cimahi",
+      "tanggal_daftar": "2026-09-20"
+    },
+    {
+      "id_pelanggan": 3,
+      "nama": "Siska Maharani",
+      "no_hp": "081234567803",
+      "alamat": "Bandung",
+      "tanggal_daftar": "2026-09-25"
+    },
+    {
+      "id_pelanggan": 4,
+      "nama": "Aulia Rahmania",
+      "no_hp": "0836878719",
+      "alamat": "Serang",
+      "tanggal_daftar": "2026-10-01"
+    },
+    {
+      "id_pelanggan": 5,
+      "nama": "Al Vanza",
+      "no_hp": "083691793701",
+      "alamat": "Ungaran",
+      "tanggal_daftar": "2026-10-01"
+    },
+    {
+      "id_pelanggan": 6,
+      "nama": "Dwi Febrina",
+      "no_hp": "0868782836837",
+      "alamat": "Semarang",
+      "tanggal_daftar": "2026-10-02"
+    }
+  ],
+  "items": [
+    {
+      "id_item": 1,
+      "nama_item": "Serum Brightening",
+      "jenis": "Produk",
+      "harga_jual": 185000,
+      "harga_pokok": 95000,
+      "stok": 35
+    },
+    {
+      "id_item": 2,
+      "nama_item": "Sunscreen SPF 50",
+      "jenis": "Produk",
+      "harga_jual": 125000,
+      "harga_pokok": 65000,
+      "stok": 50
+    },
+    {
+      "id_item": 3,
+      "nama_item": "Facial Glow",
+      "jenis": "Jasa Treatment",
+      "harga_jual": 250000,
+      "harga_pokok": 0,
+      "stok": null
+    },
+    {
+      "id_item": 4,
+      "nama_item": "Laser Rejuvenation",
+      "jenis": "Jasa Treatment",
+      "harga_jual": 650000,
+      "harga_pokok": 0,
+      "stok": null
+    },
+    {
+      "id_item": 5,
+      "nama_item": "Peeling Treatment",
+      "jenis": "Jasa Treatment",
+      "harga_jual": 350000,
+      "harga_pokok": 0,
+      "stok": null
+    },
+    {
+      "id_item": 6,
+      "nama_item": "IPL",
+      "jenis": "Jasa Treatment",
+      "harga_jual": 300000,
+      "harga_pokok": 0,
+      "stok": null
+    },
+    {
+      "id_item": 7,
+      "nama_item": "Toner",
+      "jenis": "Produk",
+      "harga_jual": 70000,
+      "harga_pokok": 30000,
+      "stok": 100
+    }
+  ],
+  "sales": [
+    {
+      "id_penjualan": 1,
+      "id_pelanggan": 5,
+      "tanggal": "2026-10-01",
+      "metode_pembayaran": "Tunai",
+      "status_pembayaran": "Lunas",
+      "total": 250000,
+      "items": [
+        {
+          "id_item": 3,
+          "jumlah": 1,
+          "harga_satuan": 250000,
+          "subtotal": 250000,
+          "nama_item": "Facial Glow",
+          "jenis": "Jasa Treatment"
+        }
+      ]
+    },
+    {
+      "id_penjualan": 2,
+      "id_pelanggan": 6,
+      "tanggal": "2026-10-02",
+      "metode_pembayaran": "Tunai",
+      "status_pembayaran": "Lunas",
+      "total": 650000,
+      "items": [
+        {
+          "id_item": 4,
+          "jumlah": 1,
+          "harga_satuan": 650000,
+          "subtotal": 650000,
+          "nama_item": "Laser Rejuvenation",
+          "jenis": "Jasa Treatment"
+        }
+      ]
+    }
+  ]
+}
