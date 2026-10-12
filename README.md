@@ -2,6 +2,23 @@
 
 Lsty Klinik adalah aplikasi demo Sistem Informasi Akuntansi untuk membantu pencatatan penjualan produk dan jasa treatment pada klinik kecantikan. Aplikasi ini mengelola data pelanggan, katalog, transaksi, serta pencatatan dan laporan keuangan. Data utama disimpan menggunakan Supabase (PostgreSQL), sementara server Node.js menyediakan antarmuka untuk penggunaan lokal.
 
+## Identitas Tugas
+
+| Keterangan | Detail |
+|---|---|
+| Nama | Anisa Listiyani |
+| NIM | 12030124120060 |
+| Mata Kuliah | Pengkodean dan Pemrograman |
+| Kelas | D |
+| Dosen Pengampu | Dr. Totok Dewayanto, S.E., M.Si., Akt. |
+
+**Disusun untuk memenuhi Tugas Project UTS Pengkodean dan Pemrograman.**
+
+## Tautan Proyek
+
+- Repository GitHub: [https://github.com/listiyanianisa20-collab/LstyKlinik](https://github.com/listiyanianisa20-collab/LstyKlinik)
+- Demo aplikasi: [https://listiyanianisa20-collab.github.io/LstyKlinik/](https://listiyanianisa20-collab.github.io/LstyKlinik/)
+
 ## Demo
 
 [Buka demo Lsty Klinik](https://listiyanianisa20-collab.github.io/LstyKlinik/)
@@ -37,7 +54,7 @@ Situs tersebut merupakan **mode demo**. Tombol login hanya formalitas; pengguna 
 
 ## ERD dan Entitas
 
-Database memiliki **5 entitas (tabel)**:
+Database memiliki **4 entitas (tabel)**:
 
 | Entitas | Fungsi |
 |---|---|
@@ -45,16 +62,14 @@ Database memiliki **5 entitas (tabel)**:
 | `item` | Menyimpan katalog produk dan jasa treatment beserta harga dan informasi stok produk. |
 | `penjualan` | Menyimpan transaksi penjualan, pelanggan, tanggal, metode, status pembayaran, dan total. |
 | `detail_penjualan` | Menyimpan item, jumlah, harga satuan, dan subtotal untuk setiap transaksi penjualan. |
-| `cicilan` | Menyimpan jadwal dan pencatatan pembayaran cicilan dari transaksi kredit. |
 
 Relasi antartabel:
 
 - `pelanggan` **1 : N** `penjualan`: satu pelanggan dapat memiliki banyak transaksi.
 - `penjualan` **1 : N** `detail_penjualan`: satu transaksi dapat memiliki banyak baris detail.
 - `item` **1 : N** `detail_penjualan`: satu item dapat muncul di banyak baris detail penjualan.
-- `penjualan` **1 : N** `cicilan`: satu transaksi kredit dapat memiliki beberapa cicilan.
 
-Jurnal umum, laporan penjualan, dan pelunasan cicilan juga disajikan melalui *view* database; semuanya merupakan hasil olahan tabel di atas, bukan entitas/tabel tambahan.
+Jadwal dan pembayaran cicilan disimpan pada kolom `jadwal_cicilan` (JSONB) dan tenor pada kolom `tenor` di tabel `penjualan`. Jurnal umum, laporan, dan piutang disajikan lewat *view* database, bukan tabel tambahan.
 
 ## Teknologi
 
@@ -90,9 +105,3 @@ Jangan mencantumkan kunci Supabase di README atau membagikan kunci rahasia.
 ## Catatan Keamanan
 
 Aplikasi menggunakan *publishable key*, bukan *secret key*. Kebijakan akses database pada skema disiapkan secara terbuka untuk kebutuhan demo dan penilaian, sehingga aplikasi ini **tidak ditujukan untuk menyimpan data pelanggan sungguhan** atau digunakan sebagai sistem produksi.
-
-## Pembuat
-
-**Anisa Listiyani**  
-Universitas Diponegoro (Undip)  
-Fakultas Ekonomika dan Bisnis
