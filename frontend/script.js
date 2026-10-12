@@ -109,9 +109,9 @@ const dateFilters = (searchParams) => {
 };
 
 function serializeSupabaseSale(sale) {
-  const installments = [...(sale.cicilan || [])].sort((left, right) => Number(left.cicilan_ke) - Number(right.cicilan_ke));
+  const installments = [...(sale.jadwal_cicilan || [])].sort((left, right) => Number(left.cicilan_ke) - Number(right.cicilan_ke));
   const payments = installments.filter((installment) => installment.status === "Lunas").map((installment) => ({
-    id_payment: installment.id_cicilan,
+    id_payment: `${sale.id_penjualan}-${installment.cicilan_ke}`,
     tanggal: installment.tanggal_bayar,
     jumlah: Number(installment.nominal || 0),
     metode_pembayaran: installment.metode_bayar || "Tunai",
@@ -122,13 +122,13 @@ function serializeSupabaseSale(sale) {
     jenis: "cicilan"
   }));
   let schedule = installments.map((installment) => ({
-    id_cicilan: installment.id_cicilan,
     cicilan_ke: Number(installment.cicilan_ke),
     tenggat: installment.jatuh_tempo,
     jumlah: Number(installment.nominal || 0),
     dibayar: installment.status === "Lunas" ? Number(installment.nominal || 0) : 0,
     tanggal_bayar: installment.tanggal_bayar || null,
     metode_bayar: installment.metode_bayar || null,
+    catatan: installment.catatan || "",
     status: installment.status === "Lunas" ? "Lunas" : "Belum"
   }));
   if (!schedule.length && sale.metode_pembayaran === "Kredit" && sale.status_pembayaran === "Belum Lunas") {
@@ -159,7 +159,7 @@ function serializeSupabaseSale(sale) {
 
 async function fetchSupabaseSales(id) {
   const query = new URLSearchParams();
-  query.set("select", "*,pelanggan(id_pelanggan,nama,no_hp,alamat),detail_penjualan(id_item,jumlah,harga_satuan,subtotal,item(id_item,nama_item,jenis)),cicilan(id_cicilan,cicilan_ke,jatuh_tempo,nominal,tanggal_bayar,metode_bayar,catatan,status)");
+  query.set("select", "*,pelanggan(id_pelanggan,nama,no_hp,alamat),detail_penjualan(id_item,jumlah,harga_satuan,subtotal,item(id_item,nama_item,jenis))");
   query.set("order", "tanggal.desc,id_penjualan.desc");
   if (id) query.set("id_penjualan", `eq.${id}`);
   const rows = await supabaseRequest(`penjualan?${query}`);
@@ -167,27 +167,16 @@ async function fetchSupabaseSales(id) {
 }
 
 async function confirmSupabaseInstallment(saleId, installmentNumber, payload) {
-  const query = new URLSearchParams({
-    select: "*",
-    id_penjualan: `eq.${saleId}`,
-    status: "eq.Belum",
-    order: "cicilan_ke.asc"
-  });
-  const openInstallments = await supabaseRequest(`cicilan?${query}`);
-  const nextInstallment = openInstallments[0];
-  if (!nextInstallment || Number(nextInstallment.cicilan_ke) !== Number(installmentNumber)) {
-    throw new Error("Pembayaran hanya dapat dicatat untuk cicilan berikutnya yang belum lunas.");
-  }
-  const payment = await supabaseRequest("rpc/konfirmasi_pembayaran_cicilan", {
+  return supabaseRequest("rpc/konfirmasi_pembayaran_cicilan", {
     method: "POST",
     body: {
-      cicilan_id: Number(nextInstallment.id_cicilan),
+      id_penjualan_input: Number(saleId),
+      cicilan_ke_input: Number(installmentNumber),
       tanggal_bayar_input: payload.tanggal_bayar || todayIso(),
       metode_bayar_input: payload.metode_bayar || "Tunai",
       catatan_input: payload.catatan || ""
     }
   });
-  return payment;
 }
 
 async function api(path, options = {}) {
@@ -267,23 +256,13 @@ async function api(path, options = {}) {
 
   if (pathname === "/api/reports/receivable-payments" && method === "GET") {
     const query = new URLSearchParams();
-    query.set("status", "eq.Lunas");
-    query.set("select", "id_cicilan,id_penjualan,cicilan_ke,tanggal_bayar,metode_bayar,catatan,nominal,penjualan(id_pelanggan,pelanggan(nama))");
+    query.set("select", "tanggal,id_penjualan,nama_pelanggan,cicilan_ke,metode_pembayaran,keterangan,nominal");
     const start = url.searchParams.get("start");
     const end = url.searchParams.get("end");
-    if (start) query.set("tanggal_bayar", `gte.${start}`);
-    if (end) query.set("tanggal_bayar", `lte.${end}`);
-    const installments = await supabaseRequest(`cicilan?${query}`);
-    const payments = (installments || []).map((installment) => ({
-      tanggal: installment.tanggal_bayar,
-      id_penjualan: installment.id_penjualan,
-      nama_pelanggan: installment.penjualan?.pelanggan?.nama || "Pelanggan",
-      cicilan_ke: installment.cicilan_ke,
-      metode_pembayaran: installment.metode_bayar,
-      keterangan: installment.catatan || "Pembayaran cicilan",
-      nominal: Number(installment.nominal || 0)
-    }));
-    return { total_kas_masuk: payments.reduce((sum, payment) => sum + payment.nominal, 0), payments };
+    if (start) query.set("tanggal", `gte.${start}`);
+    if (end) query.set("tanggal", `lte.${end}`);
+    const payments = await supabaseRequest(`view_laporan_pelunasan?${query}`);
+    return { total_kas_masuk: payments.reduce((sum, payment) => sum + Number(payment.nominal || 0), 0), payments };
   }
 
   if (pathname === "/api/reports" && method === "GET") {
@@ -294,35 +273,24 @@ async function api(path, options = {}) {
 
   if (pathname === "/api/finance/profit-loss" && method === "GET") {
     const query = dateFilters(url.searchParams);
-    query.set("select", "id_item,jenis,jumlah,subtotal");
-    const [sales, items] = await Promise.all([
-      supabaseRequest(`view_laporan_penjualan?${query}`),
-      supabaseRequest("item?select=id_item,harga_pokok,jenis")
-    ]);
-    const itemMap = new Map(items.map((item) => [String(item.id_item), item]));
-    const revenue = sales.reduce((sum, row) => sum + Number(row.subtotal || 0), 0);
-    const cost = sales.reduce((sum, row) => {
-      const item = itemMap.get(String(row.id_item));
-      return sum + (item?.jenis === "Produk" ? Number(item.harga_pokok || 0) * Number(row.jumlah || 0) : 0);
-    }, 0);
+    query.set("order", "urutan.asc");
+    const entries = await supabaseRequest(`view_laba_rugi?${query}`);
+    const totals = new Map();
+    for (const entry of entries || []) {
+      totals.set(entry.akun, (totals.get(entry.akun) || 0) + Number(entry.nilai || 0));
+    }
     return { rows: [
-      { akun: "Pendapatan", nilai: revenue },
-      { akun: "Harga Pokok Penjualan", nilai: -cost },
-      { akun: "Beban Operasional", nilai: 0 },
-      { akun: "Laba Bersih", nilai: revenue - cost }
+      { akun: "Pendapatan", nilai: totals.get("Pendapatan") || 0 },
+      { akun: "Harga Pokok Penjualan", nilai: totals.get("Harga Pokok Penjualan") || 0 },
+      { akun: "Beban Operasional", nilai: totals.get("Beban Operasional") || 0 },
+      { akun: "Laba Bersih", nilai: totals.get("Laba Bersih") || 0 }
     ] };
   }
 
   if (pathname === "/api/finance/ledger" || pathname === "/api/journal") {
     const query = dateFilters(url.searchParams);
-    query.set("order", "tanggal.asc,id_penjualan.asc");
-    const [salesEntries, paymentEntries] = await Promise.all([
-      supabaseRequest(`view_jurnal_umum?${query}`),
-      supabaseRequest(`view_jurnal_pelunasan?${query}`)
-    ]);
-    return [...(salesEntries || []), ...(paymentEntries || [])].sort((left, right) =>
-      String(left.tanggal).localeCompare(String(right.tanggal)) || Number(left.id_penjualan) - Number(right.id_penjualan)
-    );
+    query.set("order", "tanggal.asc,id_penjualan.asc,urutan.asc");
+    return supabaseRequest(`view_buku_besar?${query}`);
   }
 
   if (pathname === "/api/dashboard" && method === "GET") {
