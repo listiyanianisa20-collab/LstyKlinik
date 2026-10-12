@@ -1,4 +1,4 @@
-﻿const DEMO_LOGIN_KEY = "lsty-demo-logged-in";
+const DEMO_LOGIN_KEY = "lsty-demo-logged-in";
 const SUPABASE_URL = "https://lszqzprmovabzrwlekzq.supabase.co";
 const SUPABASE_ANON_KEY = "sb_publishable_xje_ZSuWI5tb3BHAjTvJPw_VH0FBa9D";
 
@@ -1311,4 +1311,5 @@ byId("export-report-csv").addEventListener("click", () => {
 
 byId("print-report-pdf").addEventListener("click", () => window.print());
 
+updateInstallmentFields();
 initializeDemoMode();
